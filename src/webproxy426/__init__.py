@@ -31,7 +31,7 @@ webProxyServer = strports.service(
 
 webTLSProxyServer = strports.service(
     'tcp6:port=443',
-    MagicTLSProtocolFactory(webTlsProxyServer))
+    MagicTLSProtocolFactory(webProxyServer))
 
 managementServer = strports.service(
     'tcp6:port=8080',
