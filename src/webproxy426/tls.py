@@ -55,6 +55,7 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
             acme_url = txacme.urls.LETSENCRYPT_DIRECTORY
 
         self.service = AcmeIssuingService(
+            clock=reactor,
             client_creator=partial(Client.from_url,
                                    reactor, acme_url,
                                    key=self.acme_key),

@@ -31,7 +31,7 @@ webProxyServer = strports.service(
 
 webTLSProxyServer = strports.service(
     'tcp6:port=443',
-    MagicTLSProtocolFactory(webProxyServer))
+    MagicTLSProtocolFactory(webProxyServer.factory))
 
 managementServer = strports.service(
     'tcp6:port=8080',
@@ -43,7 +43,7 @@ backendWebServer = strports.service(
 
 backendTLSWebServer = strports.service(
     'tcp6:port=443',
-    MagicTLSProtocolFactory(backendWebServer))
+    MagicTLSProtocolFactory(backendWebServer.factory))
 
 
 __all__ = [
