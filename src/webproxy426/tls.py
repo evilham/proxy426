@@ -17,7 +17,7 @@ from functools import partial
 pem_path = FilePath('acme.certs').asTextMode()
 
 def _ensure_dirs(pem_path=pem_path):
-    FilePath(pem_path).makedirs(ignoreExistingDirectory=True)
+    pem_path.makedirs(ignoreExistingDirectory=True)
 
 class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
     def __init__(self,
@@ -40,7 +40,7 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         self.responder = HTTP01Responder # TODO
 
         if not sni_map:
-            sni_map = SNIMap(responder.wrap_host_map(cert_mapping))
+            sni_map = SNIMap(cert_mapping)
 
         super(MagicTLSProtocolFactory, self).__init__(
             contextFactory=sni_map,
