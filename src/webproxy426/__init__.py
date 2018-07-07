@@ -5,6 +5,7 @@ from twisted.web import server
 from webproxy426.vhostresource import DynamicVirtualHostProxy
 from webproxy426.management import managementApp
 from webproxy426.backend import BackendWebResource
+from webproxy426.tls import MagicTLSProtocolFactory
 
 # Whitelist persistency bits
 persistency = FilePath('whitelist')
@@ -24,9 +25,13 @@ def persist():
 # End whitelist persistency bits
 
 
-webProxyServer= strports.service(
+webProxyServer = strports.service(
     'tcp6:port=80',
     server.Site(vhostResource))
+
+webTLSProxyServer = strports.service(
+    'tcp6:port=443',
+    MagicTLSProtocolFactory(webTlsProxyServer))
 
 managementServer = strports.service(
     'tcp6:port=8080',
@@ -36,8 +41,15 @@ backendWebServer = strports.service(
     'tcp6:port=80',
     server.Site(BackendWebResource()))
 
+backendTLSWebServer = strports.service(
+    'tcp6:port=443',
+    MagicTLSProtocolFactory(backendWebServer))
+
+
 __all__ = [
     'webProxyServer',
+    'webTLSProxyServer',
     'managementServer',
     'backendWebServer',
+    'backendTLSWebServer',
 ]
