@@ -26,7 +26,9 @@ class StaticOrReverseProxyResource(Resource):
     def getChild(self, path, request):
         if not request.requestHeaders.hasHeader(b'x-forwarded-for'):
             prepath = request.prePathURL()
-            return proxy.ReverseProxyResource(host, 80, prepath)
+            host = request.getHeader(b'host')
+            return proxy.ReverseProxyResource(host, request.getHost().port,
+                                              prepath)
 
 
 class HTTP01ResponderWithProxy(HTTP01Responder):

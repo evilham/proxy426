@@ -93,7 +93,7 @@ class DynamicVirtualHostProxy(vhost.NameVirtualHost):
         if not self.isValidHost(host):
             return resource.NoResource()
         # Get reverse proxy resource
-        return proxy.ReverseProxyResource(host, 80, b'')
+        return proxy.ReverseProxyResource(host, request.getHost().port, b'')
 
     def isValidHost(self, host):
         """
