@@ -1,7 +1,7 @@
 from twisted.python.filepath import FilePath
 from twisted.internet import defer, reactor
 from twisted.protocols.tls import TLSMemoryBIOFactory
-from twisted.web import server
+from twisted.web import server, proxy
 from twisted.web.resource import Resource
 
 from txacme.service import AcmeIssuingService
@@ -20,6 +20,18 @@ pem_path = FilePath('acme.certs').asTextMode()
 
 def _ensure_dirs(pem_path=pem_path):
     pem_path.makedirs(ignoreExistingDirectory=True)
+
+
+class StaticOrReverseProxyResource(Resource):
+    def getChild(self, path, request):
+        if not request.requestHeaders.hasHeader(b'x-forwarded-for'):
+            prepath = request.prepathURL()
+            return proxy.ReverseProxyResource(host, 80, prepath)
+
+
+class HTTP01ResponderWithProxy(HTTP01Responder):
+    def __init__(self):
+        self.resource = StaticOrReverseProxyResource()
 
 class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
     def __init__(self,

@@ -1,6 +1,6 @@
 from twisted.web import server, proxy, vhost, resource
-from twisted.internet import reactor, defer
-from twisted.names.client import lookupIPV6Address
+from twisted.internet import reactor, defer, address
+from twisted.names.client import lookupAddress, lookupIPV6Address
 from twisted.python.compat import urllib_parse
 
 import socket
@@ -11,22 +11,36 @@ def implReverseProxyRenderKeepHost(self, request):
     """
     Actual resource rendering.
 
-    Query C{DNS} for the host's C{AAAA} record. Use the host's IPv6 address
-    to establish the TCP connection, but keep the hostname as value of the
-    C{Host} HTTP header.
+    If client connects over IPv4: query C{DNS} for the host's C{AAAA} record.
+    Or if client connects over IPv6: query C{DNS} for the host's C{A} record.
+
+    Use resulting IPv6 (or IPv4) address to establish the TCP connection,
+    but keep the hostname as value of the C{Host} HTTP header.
+
+    A C{X-PROXIED} header is added to avoid circular references.
     """
-    dns_result = yield lookupIPV6Address(self.host)
-    ipv6 = socket.inet_ntop(socket.AF_INET6, dns_result[0][0].payload.address)
-    self.host = ipv6
+    if isinstance(request.client, address.IPv4Address):
+        dns_result = yield lookupIPV6Address(self.host)
+        self.host = socket.inet_ntop(socket.AF_INET6,
+                                     dns_result[0][0].payload.address)
+    else:
+        dns_result = yield lookupAddress(self.host)
+        self.host  = socket.inet_ntop(socket.AF_INET,
+                                      dns_result[0][0].payload.address)
+
     request.content.seek(0, 0)
     qs = urllib_parse.urlparse(request.uri)[4]
     if qs:
         rest = self.path + b'?' + qs
     else:
         rest = self.path
+
+    headers = request.getAllHeaders()
+    headers[b'x-forwarded-for'] = request.getClientIP()
+
     clientFactory = self.proxyClientFactoryClass(
         request.method, rest, request.clientproto,
-        request.getAllHeaders(), request.content.read(), request)
+        headers, request.content.read(), request)
     self.reactor.connectTCP(self.host, self.port, clientFactory)
 
 def reverseProxyRenderKeepHost(self, request):
