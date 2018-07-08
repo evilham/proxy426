@@ -99,6 +99,7 @@ class AcmeService(AcmeIssuingService):
         self._responder = responder
 
         if acme_key is None:
+            _ensure_dirs(pem_path)
             acme_key = load_or_create_client_key(pem_path)
 
         if staging:
