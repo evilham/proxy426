@@ -7,6 +7,10 @@ from webproxy426.management import managementApp
 from webproxy426.backend import BackendWebResource
 from webproxy426.tls import MagicTLSProtocolFactory, AcmeService
 
+import os
+
+staging = os.environ.get('LE_PRODUCTION', False) == False
+
 # Whitelist persistency bits
 persistency = FilePath('whitelist')
 
@@ -36,7 +40,7 @@ def _acme_check_certs(hosts):
         host = bhost.decode('utf-8')
         acmeService.check_or_issue_cert(host)
 
-acmeService = AcmeService()
+acmeService = AcmeService(staging=staging)
 
 # Restore VirtualHostProxy with whitelist after initialising acmeService
 vhostResource = restoreVhostResource()
