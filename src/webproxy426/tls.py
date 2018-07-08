@@ -25,7 +25,7 @@ def _ensure_dirs(pem_path=pem_path):
 class StaticOrReverseProxyResource(Resource):
     def getChild(self, path, request):
         if not request.requestHeaders.hasHeader(b'x-forwarded-for'):
-            prepath = request.prepathURL()
+            prepath = request.prePathURL()
             return proxy.ReverseProxyResource(host, 80, prepath)
 
 
