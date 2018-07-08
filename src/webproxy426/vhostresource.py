@@ -5,6 +5,8 @@ from twisted.python.compat import urllib_parse
 
 import socket
 
+ip426webproxy = 'webproxy.hack4glarus.ungleich.cloud'
+
 # Ugly but works :-D
 @defer.inlineCallbacks
 def implReverseProxyRenderKeepHost(self, request):
@@ -12,21 +14,18 @@ def implReverseProxyRenderKeepHost(self, request):
     Actual resource rendering.
 
     If client connects over IPv4: query C{DNS} for the host's C{AAAA} record.
-    Or if client connects over IPv6: query C{DNS} for the host's C{A} record.
+    Or if client connects over IPv6: use the hostname of the webproxy.
 
-    Use resulting IPv6 (or IPv4) address to establish the TCP connection,
+    Use resulting IPv6 address to establish the TCP connection,
     but keep the hostname as value of the C{Host} HTTP header.
 
-    A C{X-PROXIED} header is added to avoid circular references.
+    A C{X-Forwarded-For} header is added to avoid circular references.
     """
-    if isinstance(request.client, address.IPv4Address):
-        dns_result = yield lookupIPV6Address(self.host)
-        self.host = socket.inet_ntop(socket.AF_INET6,
-                                     dns_result[0][0].payload.address)
-    else:
-        dns_result = yield lookupAddress(self.host)
-        self.host  = socket.inet_ntop(socket.AF_INET,
-                                      dns_result[0][0].payload.address)
+    if isinstance(request.client, address.IPv6Address):
+        self.host = ip426webproxy
+    dns_result = yield lookupIPV6Address(self.host)
+    self.host = socket.inet_ntop(socket.AF_INET6,
+                                 dns_result[0][0].payload.address)
 
     request.content.seek(0, 0)
     qs = urllib_parse.urlparse(request.uri)[4]
@@ -36,7 +35,7 @@ def implReverseProxyRenderKeepHost(self, request):
         rest = self.path
 
     headers = request.getAllHeaders()
-    headers[b'x-forwarded-for'] = request.getClientIP()
+    headers[b'x-forwarded-for'] = request.getClientIP().encode('utf-8')
 
     clientFactory = self.proxyClientFactoryClass(
         request.method, rest, request.clientproto,

@@ -25,10 +25,9 @@ def _ensure_dirs(pem_path=pem_path):
 class StaticOrReverseProxyResource(Resource):
     def getChild(self, path, request):
         if not request.requestHeaders.hasHeader(b'x-forwarded-for'):
-            prepath = request.prePathURL()
             host = request.getHeader(b'host')
             return proxy.ReverseProxyResource(host, request.getHost().port,
-                                              prepath)
+                                              request.path)
 
 
 class HTTP01ResponderWithProxy(HTTP01Responder):
@@ -115,7 +114,7 @@ class AcmeService(AcmeIssuingService):
         super(AcmeService, self).__init__(
             clock=clock,
             client_creator=partial(Client.from_url,
-                                   clock, acme_url,
+                                   reactor=clock, url=acme_url,
                                    key=acme_key),
             cert_store=DirectoryStore(pem_path),
             responders=[responder],
