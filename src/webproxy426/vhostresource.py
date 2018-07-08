@@ -72,6 +72,9 @@ class DynamicVirtualHostProxy(vhost.NameVirtualHost):
         If host is valid, return matching proxy to C{AAAA} DNS entry.
         If host is not valid, return a C{NoResource} instance.
         """
+        if (request.prepath and
+            request.prepath[0] in self.listStaticNames()):
+            return self.getStaticEntity(request.prepath[0])
         host = request.getHeader(b'host')
         if not self.isValidHost(host):
             return resource.NoResource()

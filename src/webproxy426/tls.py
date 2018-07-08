@@ -1,6 +1,8 @@
 from twisted.python.filepath import FilePath
 from twisted.internet import defer, reactor
 from twisted.protocols.tls import TLSMemoryBIOFactory
+from twisted.web import server
+from twisted.web.resource import Resource
 
 from txacme.service import AcmeIssuingService
 from txacme.store import DirectoryStore
@@ -37,7 +39,14 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         cert_mapping = HostDirectoryMap(pem_path)
 
         self.staging = staging
-        self.responder = HTTP01Responder # TODO
+        self.responder = HTTP01Responder()
+
+        if isinstance(protocolFactory, server.Site):
+            # Add .well-known
+            well_known = Resource()
+            well_known.putChild(b'acme-challenge', self.responder.resource)
+            protocolFactory.putChild(b'.well-known', well_known)
+
 
         if not sni_map:
             sni_map = SNIMap(cert_mapping)
