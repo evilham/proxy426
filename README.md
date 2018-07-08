@@ -8,6 +8,9 @@ Developed at #Hack4Glarus summer 2018.
 Check article (in German):
 https://www.pro-linux.de/artikel/2/1938/warum-sie-ipv6-brauchen.html
 
+> UPDATE: This may be a complete overkill and a terrible idea :-D.
+> Apparently Nginx has Proxying abilities for mail protocols.
+> https://docs.nginx.com/nginx/admin-guide/mail-proxy/mail-proxy/
 
 ## Implementation
 
@@ -27,10 +30,10 @@ Check https://twistedmatrix.com
 
 ## Roadmap
 
-[X] HTTP
-[ ] HTTPS
-[ ] SMTP
-[ ] SMTPS
-[ ] IMAP
-[ ] IMAPS
-[ ] SIP?
+- [X] HTTP
+- [X] HTTPS
+- [ ] SMTP
+- [ ] SMTPS
+- [ ] IMAP
+- [ ] IMAPS
+- [ ] SIP?
