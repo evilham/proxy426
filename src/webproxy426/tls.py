@@ -91,7 +91,7 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
 class AcmeService(AcmeIssuingService):
     def __init__(self,
                  acme_key=None,
-                 staging=False, pem_path=pem_path,
+                 staging=True, pem_path=pem_path,
                  clock=reactor, responder=None):
         if responder is None:
             responder = HTTP01ResponderWithProxy()
