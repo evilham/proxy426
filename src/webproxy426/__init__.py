@@ -60,7 +60,7 @@ managementServer = strports.service(
 
 backendWebServer = strports.service(
     'tcp6:port=80',
-    server.Site(BackendWebResource()))
+    server.Site(BackendWebResource(acmeService)))
 
 backendTLSWebServer = strports.service(
     'tcp6:port=443',
