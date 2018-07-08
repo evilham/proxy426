@@ -21,7 +21,8 @@ def implReverseProxyRenderKeepHost(self, request):
 
     A C{X-Forwarded-For} header is added to avoid circular references.
     """
-    if isinstance(request.client, address.IPv6Address):
+    if (isinstance(request.client, address.IPv6Address) and
+            not request.client.host.startswith('::ffff:')):
         self.host = ip426webproxy
     dns_result = yield lookupIPV6Address(self.host)
     self.host = socket.inet_ntop(socket.AF_INET6,
