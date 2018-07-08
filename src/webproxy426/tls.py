@@ -45,7 +45,7 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
             # Add .well-known
             well_known = Resource()
             well_known.putChild(b'acme-challenge', self.responder.resource)
-            protocolFactory.putChild(b'.well-known', well_known)
+            protocolFactory.resource.putChild(b'.well-known', well_known)
 
 
         if not sni_map:
