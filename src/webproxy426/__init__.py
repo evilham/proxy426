@@ -32,7 +32,7 @@ def persist():
 
 def _acme_check_certs(hosts):
     for bhost in hosts:
-        host = bhost.encode('utf-8')
+        host = bhost.decode('utf-8')
         acmeService.check_or_issue_cert(host)
 
 acmeService = AcmeService()
