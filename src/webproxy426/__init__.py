@@ -17,7 +17,7 @@ persistency = FilePath('whitelist')
 def restoreVhostResource():
     if persistency.isfile():
         whitelist = persistency.getContent().split(b'\n')
-        vhostResource = DynamicVirtualHostProxy(hostWhitelist=whitelist)
+        vhostResource = DynamicVirtualHostProxy(hostWhitelist=set(whitelist))
         # Trigger possible cert checks
         _acme_check_certs(whitelist)
     else:
