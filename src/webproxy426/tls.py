@@ -39,7 +39,9 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         self.staging = staging
 
         if acmeService is None:
-            self.acmeService = AcmeService()
+            self.acmeService = AcmeService(pem_path=pem_path,
+                                           acme_key=acme_key,
+                                           staging=staging)
         else:
             self.acmeService = acmeService
 
@@ -76,6 +78,7 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
 
 class AcmeService(AcmeIssuingService):
     def __init__(self,
+                 acme_key=None,
                  staging=False, pem_path=pem_path,
                  clock=reactor, responder=None):
         if responder is None:
