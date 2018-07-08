@@ -4,7 +4,7 @@ from twisted.application import service, strports
 
 from functools import lru_cache
 
-@lru_cache(max_size=1024)
+@lru_cache(maxsize=1024)
 def check_host(host, acmeService):
     acmeService.check_or_issue_cert(host)
     return True
