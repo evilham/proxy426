@@ -78,7 +78,7 @@ class AcmeService(AcmeIssuingService):
     def __init__(self,
                  staging=False, pem_path=pem_path,
                  clock=reactor, responder=None):
-        if responer is None:
+        if responder is None:
             responder = HTTP01Responder()
         # Keep an easy reference to this responder
         service._responer = responder
