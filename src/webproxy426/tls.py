@@ -106,9 +106,10 @@ class AcmeService(AcmeIssuingService):
             responders=[responder],
         )
 
+    @defer.inlineCallbacks
     def check_or_issue_cert(self, server_name):
         try:
-            self.cert_store.get(server_name)
+            yield self.cert_store.get(server_name)
             if self.running:
                 self._check_certs()
         except KeyError:
