@@ -2,6 +2,10 @@
 
 Developed at #Hack4Glarus summer 2018.
 
+https://hack4glarus.ch
+
+https://evilham.com/en/slides/2018-Hack4Glarus-summer
+
 
 ## Background
 
