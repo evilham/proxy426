@@ -94,7 +94,7 @@ class AcmeService(AcmeIssuingService):
                  staging=False, pem_path=pem_path,
                  clock=reactor, responder=None):
         if responder is None:
-            responder = HTTP01Responder()
+            responder = HTTP01ResponderWithProxy()
         # Keep an easy reference to this responder
         self._responder = responder
 
