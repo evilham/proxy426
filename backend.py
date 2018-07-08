@@ -1,6 +1,6 @@
 from twisted.application import service
 
-from webproxy426 import backendWebServer
+from webproxy426 import backendWebServer, backendTLSWebServer
 
 
 application = service.Application(
