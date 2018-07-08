@@ -18,6 +18,7 @@ def restoreVhostResource():
         _acme_check_certs(whitelist)
     else:
         vhostResource = DynamicVirtualHostProxy()
+    return vhostResource
 
 def persist():
     """
