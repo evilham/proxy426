@@ -109,6 +109,7 @@ class AcmeService(AcmeIssuingService):
     def check_or_issue_cert(self, server_name):
         try:
             self.cert_store.get(server_name)
-            self._check_certs()
+            if self.running:
+                self._check_certs()
         except KeyError:
             self.issue_cert(server_name)
