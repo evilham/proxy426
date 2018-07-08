@@ -84,7 +84,7 @@ class AcmeService(AcmeIssuingService):
         if responder is None:
             responder = HTTP01Responder()
         # Keep an easy reference to this responder
-        self._responer = responder
+        self._responder = responder
 
         if acme_key is None:
             acme_key = load_or_create_client_key(pem_path)
