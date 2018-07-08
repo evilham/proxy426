@@ -27,19 +27,23 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
                  pem_path=pem_path,
                  acme_key=None,
                  staging=True,
-                 sni_map=None):
+                 sni_map=None,
+                 acmeService=None):
 
         _ensure_dirs(pem_path)
 
-        if acme_key is None:
-            acme_key = load_or_create_client_key(pem_path)
         self.acme_key = acme_key
 
-        self.cert_store = DirectoryStore(pem_path)
         cert_mapping = HostDirectoryMap(pem_path)
 
         self.staging = staging
-        self.responder = HTTP01Responder()
+
+        if acmeService is None:
+            self.acmeService = AcmeService()
+        else:
+            self.acmeService = acmeService
+
+        self.responder = self.acmeService._responder
 
         if isinstance(protocolFactory, server.Site):
             # Add .well-known
@@ -58,22 +62,50 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         )
 
     def startFactory(self):
-        if self.staging:
+        self.acmeService._factories.add(self)
+        if not self.acmeService.running:
+            self.acmeService.startService()
+        super(MagicTLSProtocolFactory, self).startFactory()
+
+    def stopFactory(self):
+        self.acmeService._factories.remove(self)
+        # Only stop AcmeService if there are no associated factories left
+        if self.acmeService.running and not self.acmeService._factories:
+            self.acmeService.stopService()
+        super(MagicTLSProtocolFactory, self).stopFactory()
+
+class AcmeService(AcmeIssuingService):
+    def __init__(self,
+                 staging=False, pem_path=pem_path,
+                 clock=reactor, responder=None):
+        if responer is None:
+            responder = HTTP01Responder()
+        # Keep an easy reference to this responder
+        service._responer = responder
+
+        if acme_key is None:
+            acme_key = load_or_create_client_key(pem_path)
+
+        if staging:
             acme_url = txacme.urls.LETSENCRYPT_STAGING_DIRECTORY
         else:
             acme_url = txacme.urls.LETSENCRYPT_DIRECTORY
 
-        self.service = AcmeIssuingService(
-            clock=reactor,
-            client_creator=partial(Client.from_url,
-                                   reactor, acme_url,
-                                   key=self.acme_key),
-            cert_store=self.cert_store,
-            responders=[self.responder],
-        )
-        self.service.startService()
-        super(MagicTLSProtocolFactory, self).startFactory()
+        # Keep track of factories used with this AcmeService
+        service._factories = set()
 
-    def stopFactory(self):
-        self.service.stopService()
-        super(MagicTLSProtocolFactory, self).stopFactory()
+        super(AcmeService, self).__init__(
+            clock=clock,
+            client_creator=partial(Client.from_url,
+                                   clock, acme_url,
+                                   key=acme_key),
+            cert_store=DirectoryStore(pem_path),
+            responders=[responder],
+        )
+
+    def check_or_issue_cert(self, server_name):
+        try:
+            self.cert_store.get(server_name)
+            self._check_certs()
+        except KeyError:
+            self.issue_cert(server_name)
