@@ -81,7 +81,7 @@ class AcmeService(AcmeIssuingService):
         if responder is None:
             responder = HTTP01Responder()
         # Keep an easy reference to this responder
-        service._responer = responder
+        self._responer = responder
 
         if acme_key is None:
             acme_key = load_or_create_client_key(pem_path)
@@ -92,7 +92,7 @@ class AcmeService(AcmeIssuingService):
             acme_url = txacme.urls.LETSENCRYPT_DIRECTORY
 
         # Keep track of factories used with this AcmeService
-        service._factories = set()
+        self._factories = set()
 
         super(AcmeService, self).__init__(
             clock=clock,
