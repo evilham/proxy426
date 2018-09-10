@@ -53,6 +53,7 @@ Use environment variables:
     frontendHTTPS = os.environ.get('PROXY_FRONTEND_HTTPS', 443)
     certDir = FilePath(os.environ.get('PROXY_CERT_DIR',
                                       '../acme.certs')).asTextMode()
+    persistencyFile = os.environ.get('PROXY_PERSISTENCY_FILE', '../whitelist')
 
 ## Management API
 There is a very basic management API that is evil (tm) and has no

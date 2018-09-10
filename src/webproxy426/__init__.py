@@ -17,9 +17,10 @@ frontendHTTP = os.environ.get('PROXY_FRONTEND_HTTP', 80)
 frontendHTTPS = os.environ.get('PROXY_FRONTEND_HTTPS', 443)
 certDir = FilePath(os.environ.get('PROXY_CERT_DIR',
                                   '../acme.certs')).asTextMode()
+persistencyFile = os.environ.get('PROXY_PERSISTENCY_FILE', '../whitelist')
 
 # Whitelist persistency bits
-persistency = FilePath('whitelist')
+persistency = FilePath(persistencyFile)
 
 def restoreVhostResource():
     if persistency.isfile():
