@@ -21,16 +21,46 @@ https://www.pro-linux.de/artikel/2/1938/warum-sie-ipv6-brauchen.html
 This uses Twisted Python extensively.
 Check https://twistedmatrix.com
 
+## Status
+The proxy/frontend is currently usable, the backend is just for testing and
+should never be used.
+
+This uses a custom `AcmeService` that issues or renews TLS certificates
+on the fly for allowed domains.
+
+It is pretty much zero-config, in that it queries DNS for the AAAA records
+of the counter party IPv6 host.
+
+## TODO
+* Check if acme challenges are served if queried via IP.
 
 ## Running
 
-    # Make some virtual environment
+    # If using pipenv
+    pipenv sync
+    # Otherwise make some virtual environment and run
     pip install -r requirements.txt
     # Run this on the dual stack server that will proxy IPv4 requests:
     twistd -ny proxy.py
     # Run this on the IPv6-only servers
     twistd -ny backend.py
 
+## Configuring
+
+Use environment variables:
+
+    managementPort = os.environ.get('PROXY_MANAGEMENT', 8080)
+    backendHTTP = os.environ.get('PROXY_BACKEND_HTTP', 80)
+    backendHTTPS = os.environ.get('PROXY_BACKEND_HTTPS', 443)
+    frontendHTTP = os.environ.get('PROXY_FRONTEND_HTTP', 80)
+    frontendHTTPS = os.environ.get('PROXY_FRONTEND_HTTPS', 443)
+    certDir = FilePath(os.environ.get('PROXY_CERT_DIR',
+                                      '../acme.certs')).asTextMode()
+
+## Management API
+There is a very basic management API that is evil (tm) and has no
+auth{entication,orisation} mechanisms whatsoever.
+See `./src/webproxy426/management.py`.
 
 ## Roadmap
 

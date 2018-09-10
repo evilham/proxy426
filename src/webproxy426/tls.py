@@ -16,7 +16,7 @@ from txsni.snimap import SNIMap, HostDirectoryMap
 
 from functools import partial
 
-pem_path = FilePath('acme.certs').asTextMode()
+pem_path = FilePath('../acme.certs').asTextMode()
 
 def _ensure_dirs(pem_path=pem_path):
     pem_path.makedirs(ignoreExistingDirectory=True)

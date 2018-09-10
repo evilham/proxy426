@@ -10,6 +10,13 @@ from webproxy426.tls import MagicTLSProtocolFactory, AcmeService
 import os
 
 staging = os.environ.get('LE_PRODUCTION', False) == False
+managementPort = os.environ.get('PROXY_MANAGEMENT', 8080)
+backendHTTP = os.environ.get('PROXY_BACKEND_HTTP', 80)
+backendHTTPS = os.environ.get('PROXY_BACKEND_HTTPS', 443)
+frontendHTTP = os.environ.get('PROXY_FRONTEND_HTTP', 80)
+frontendHTTPS = os.environ.get('PROXY_FRONTEND_HTTPS', 443)
+certDir = FilePath(os.environ.get('PROXY_CERT_DIR',
+                                  '../acme.certs')).asTextMode()
 
 # Whitelist persistency bits
 persistency = FilePath('whitelist')
@@ -40,30 +47,30 @@ def _acme_check_certs(hosts):
         host = bhost.decode('utf-8')
         acmeService.check_or_issue_cert(host)
 
-acmeService = AcmeService(staging=staging)
+acmeService = AcmeService(staging=staging, pem_path=certDir)
 
 # Restore VirtualHostProxy with whitelist after initialising acmeService
 vhostResource = restoreVhostResource()
 
 webProxyServer = strports.service(
-    'tcp6:port=80',
+    'tcp6:port={}'.format(frontendHTTP),
     server.Site(vhostResource))
 
 webTLSProxyServer = strports.service(
-    'tcp6:port=443',
+    'tcp6:port={}'.format(frontendHTTPS),
     MagicTLSProtocolFactory(webProxyServer.factory,
                             acmeService=acmeService))
 
 managementServer = strports.service(
-    'tcp6:port=8080',
+    'tcp6:port={}'.format(managementPort),
     server.Site(managementApp(vhostResource, persist).resource()))
 
 backendWebServer = strports.service(
-    'tcp6:port=80',
+    'tcp6:port={}'.format(backendHTTP),
     server.Site(BackendWebResource(acmeService)))
 
 backendTLSWebServer = strports.service(
-    'tcp6:port=443',
+    'tcp6:port={}'.format(backendHTTPS),
     MagicTLSProtocolFactory(backendWebServer.factory,
                             acmeService=acmeService))
 
