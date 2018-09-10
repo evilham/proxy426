@@ -31,9 +31,6 @@ on the fly for allowed domains.
 It is pretty much zero-config, in that it queries DNS for the AAAA records
 of the counter party IPv6 host.
 
-## TODO
-* Check if acme challenges are served if queried via IP.
-
 ## Running
 
     # If using pipenv
