@@ -5,7 +5,7 @@ from twisted.python.compat import urllib_parse
 
 import socket
 
-ip426webproxy = 'webproxy.hack4glarus.ungleich.cloud'
+ip426webproxy = "webproxy.hack4glarus.ungleich.cloud"
 
 # Ugly but works :-D
 @defer.inlineCallbacks
@@ -21,27 +21,33 @@ def implReverseProxyRenderKeepHost(self, request):
 
     A C{X-Forwarded-For} header is added to avoid circular references.
     """
-    if (isinstance(request.client, address.IPv6Address) and
-            not request.client.host.startswith('::ffff:')):
+    if isinstance(
+        request.client, address.IPv6Address
+    ) and not request.client.host.startswith("::ffff:"):
         self.host = ip426webproxy
     dns_result = yield lookupIPV6Address(self.host)
-    self.host = socket.inet_ntop(socket.AF_INET6,
-                                 dns_result[0][0].payload.address)
+    self.host = socket.inet_ntop(socket.AF_INET6, dns_result[0][0].payload.address)
 
     request.content.seek(0, 0)
     qs = urllib_parse.urlparse(request.uri)[4]
     if qs:
-        rest = self.path + b'?' + qs
+        rest = self.path + b"?" + qs
     else:
         rest = self.path
 
     headers = request.getAllHeaders()
-    headers[b'x-forwarded-for'] = request.getClientIP().encode('utf-8')
+    headers[b"x-forwarded-for"] = request.getClientIP().encode("utf-8")
 
     clientFactory = self.proxyClientFactoryClass(
-        request.method, rest, request.clientproto,
-        headers, request.content.read(), request)
+        request.method,
+        rest,
+        request.clientproto,
+        headers,
+        request.content.read(),
+        request,
+    )
     self.reactor.connectTCP(self.host, self.port, clientFactory)
+
 
 def reverseProxyRenderKeepHost(self, request):
     """
@@ -52,9 +58,11 @@ def reverseProxyRenderKeepHost(self, request):
     self._render(request)
     return server.NOT_DONE_YET
 
+
 proxy.ReverseProxyResource._render = implReverseProxyRenderKeepHost
 proxy.ReverseProxyResource.render = reverseProxyRenderKeepHost
 # End of awesomely ugly hack
+
 
 class DynamicVirtualHostProxy(vhost.NameVirtualHost):
     """
@@ -63,6 +71,7 @@ class DynamicVirtualHostProxy(vhost.NameVirtualHost):
     @ivar hostWhitelist: This instance's whitelist.
     @ivar validateHostFunc: This instance's validation function.
     """
+
     def __init__(self, *args, **kwargs):
         """
         Create a DynamicVirtualHostProxy.
@@ -75,8 +84,8 @@ class DynamicVirtualHostProxy(vhost.NameVirtualHost):
             after checking the whitelist. Whitelist has priority over this.
         @type  validateHostFunc: Callable accepting C{host} as a parameter.
         """
-        self.hostWhitelist = kwargs.pop('hostWhitelist', set())
-        self.validateHostFunc = kwargs.pop('validateHostFunc', lambda x: False)
+        self.hostWhitelist = kwargs.pop("hostWhitelist", set())
+        self.validateHostFunc = kwargs.pop("validateHostFunc", lambda x: False)
         super(DynamicVirtualHostProxy, self).__init__(*args, **kwargs)
 
     def _getResourceForRequest(self, request):
@@ -86,14 +95,13 @@ class DynamicVirtualHostProxy(vhost.NameVirtualHost):
         If host is valid, return matching proxy to C{AAAA} DNS entry.
         If host is not valid, return a C{NoResource} instance.
         """
-        if (request.prepath and
-            request.prepath[0] in self.listStaticNames()):
+        if request.prepath and request.prepath[0] in self.listStaticNames():
             return self.getStaticEntity(request.prepath[0])
-        host = request.getHeader(b'host')
+        host = request.getHeader(b"host")
         if not self.isValidHost(host):
             return resource.NoResource()
         # Get reverse proxy resource
-        return proxy.ReverseProxyResource(host, request.getHost().port, b'')
+        return proxy.ReverseProxyResource(host, request.getHost().port, b"")
 
     def isValidHost(self, host):
         """

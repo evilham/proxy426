@@ -16,7 +16,8 @@ from txsni.snimap import SNIMap, HostDirectoryMap
 
 from functools import partial
 
-pem_path = FilePath('../acme.certs').asTextMode()
+pem_path = FilePath("../acme.certs").asTextMode()
+
 
 def _ensure_dirs(pem_path=pem_path):
     pem_path.makedirs(ignoreExistingDirectory=True)
@@ -24,24 +25,28 @@ def _ensure_dirs(pem_path=pem_path):
 
 class StaticOrReverseProxyResource(Resource):
     def getChild(self, path, request):
-        if not request.requestHeaders.hasHeader(b'x-forwarded-for'):
-            host = request.getHeader(b'host')
-            return proxy.ReverseProxyResource(host, request.getHost().port,
-                                              request.path)
+        if not request.requestHeaders.hasHeader(b"x-forwarded-for"):
+            host = request.getHeader(b"host")
+            return proxy.ReverseProxyResource(
+                host, request.getHost().port, request.path
+            )
 
 
 class HTTP01ResponderWithProxy(HTTP01Responder):
     def __init__(self):
         self.resource = StaticOrReverseProxyResource()
 
+
 class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
-    def __init__(self,
-                 protocolFactory,
-                 pem_path=pem_path,
-                 acme_key=None,
-                 staging=True,
-                 sni_map=None,
-                 acmeService=None):
+    def __init__(
+        self,
+        protocolFactory,
+        pem_path=pem_path,
+        acme_key=None,
+        staging=True,
+        sni_map=None,
+        acmeService=None,
+    ):
 
         _ensure_dirs(pem_path)
 
@@ -52,9 +57,9 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         self.staging = staging
 
         if acmeService is None:
-            self.acmeService = AcmeService(pem_path=pem_path,
-                                           acme_key=acme_key,
-                                           staging=staging)
+            self.acmeService = AcmeService(
+                pem_path=pem_path, acme_key=acme_key, staging=staging
+            )
         else:
             self.acmeService = acmeService
 
@@ -63,9 +68,8 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
         if isinstance(protocolFactory, server.Site):
             # Add .well-known
             well_known = Resource()
-            well_known.putChild(b'acme-challenge', self.responder.resource)
-            protocolFactory.resource.putChild(b'.well-known', well_known)
-
+            well_known.putChild(b"acme-challenge", self.responder.resource)
+            protocolFactory.resource.putChild(b".well-known", well_known)
 
         if not sni_map:
             sni_map = SNIMap(cert_mapping)
@@ -89,11 +93,16 @@ class MagicTLSProtocolFactory(TLSMemoryBIOFactory):
             self.acmeService.stopService()
         super(MagicTLSProtocolFactory, self).stopFactory()
 
+
 class AcmeService(AcmeIssuingService):
-    def __init__(self,
-                 acme_key=None,
-                 staging=True, pem_path=pem_path,
-                 clock=reactor, responder=None):
+    def __init__(
+        self,
+        acme_key=None,
+        staging=True,
+        pem_path=pem_path,
+        clock=reactor,
+        responder=None,
+    ):
         if responder is None:
             responder = HTTP01ResponderWithProxy()
         # Keep an easy reference to this responder
@@ -113,9 +122,9 @@ class AcmeService(AcmeIssuingService):
 
         super(AcmeService, self).__init__(
             clock=clock,
-            client_creator=partial(Client.from_url,
-                                   reactor=clock, url=acme_url,
-                                   key=acme_key),
+            client_creator=partial(
+                Client.from_url, reactor=clock, url=acme_url, key=acme_key
+            ),
             cert_store=DirectoryStore(pem_path),
             responders=[responder],
         )

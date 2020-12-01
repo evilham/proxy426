@@ -4,6 +4,7 @@ from twisted.application import service, strports
 
 from functools import lru_cache
 
+
 @lru_cache(maxsize=1024)
 def check_host(host, acmeService):
     acmeService.check_or_issue_cert(host)
@@ -24,7 +25,7 @@ class BackendWebResource(resource.Resource):
     def render(self, request):
         host = request.requestHeaders.getRawHeaders(b"Host")[0]
 
-        check_host(host.decode('utf-8'), self.acmeService)
+        check_host(host.decode("utf-8"), self.acmeService)
 
         return host
 

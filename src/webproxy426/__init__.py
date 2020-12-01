@@ -9,22 +9,22 @@ from webproxy426.tls import MagicTLSProtocolFactory, AcmeService
 
 import os
 
-staging = os.environ.get('LE_PRODUCTION', False) == False
-managementPort = os.environ.get('PROXY_MANAGEMENT', 8080)
-backendHTTP = os.environ.get('PROXY_BACKEND_HTTP', 80)
-backendHTTPS = os.environ.get('PROXY_BACKEND_HTTPS', 443)
-frontendHTTP = os.environ.get('PROXY_FRONTEND_HTTP', 80)
-frontendHTTPS = os.environ.get('PROXY_FRONTEND_HTTPS', 443)
-certDir = FilePath(os.environ.get('PROXY_CERT_DIR',
-                                  '../acme.certs')).asTextMode()
-persistencyFile = os.environ.get('PROXY_PERSISTENCY_FILE', '../whitelist')
+staging = os.environ.get("LE_PRODUCTION", False) == False
+managementPort = os.environ.get("PROXY_MANAGEMENT", 8080)
+backendHTTP = os.environ.get("PROXY_BACKEND_HTTP", 80)
+backendHTTPS = os.environ.get("PROXY_BACKEND_HTTPS", 443)
+frontendHTTP = os.environ.get("PROXY_FRONTEND_HTTP", 80)
+frontendHTTPS = os.environ.get("PROXY_FRONTEND_HTTPS", 443)
+certDir = FilePath(os.environ.get("PROXY_CERT_DIR", "../acme.certs")).asTextMode()
+persistencyFile = os.environ.get("PROXY_PERSISTENCY_FILE", "../whitelist")
 
 # Whitelist persistency bits
 persistency = FilePath(persistencyFile)
 
+
 def restoreVhostResource():
     if persistency.isfile():
-        whitelist = persistency.getContent().split(b'\n')
+        whitelist = persistency.getContent().split(b"\n")
         vhostResource = DynamicVirtualHostProxy(hostWhitelist=set(whitelist))
         # Trigger possible cert checks
         _acme_check_certs(whitelist)
@@ -32,21 +32,25 @@ def restoreVhostResource():
         vhostResource = DynamicVirtualHostProxy()
     return vhostResource
 
+
 def persist():
     """
     Save current whitelist to disk as closely to an atomary OP as possible.
     """
-    persistency.setContent(b'\n'.join(list(vhostResource.hostWhitelist)))
+    persistency.setContent(b"\n".join(list(vhostResource.hostWhitelist)))
     persistency.chmod(0o600)
     # Trigger possible cert checks
     _acme_check_certs(vhostResource.hostWhitelist)
 
+
 # End whitelist persistency bits
+
 
 def _acme_check_certs(hosts):
     for bhost in hosts:
-        host = bhost.decode('utf-8')
+        host = bhost.decode("utf-8")
         acmeService.check_or_issue_cert(host)
+
 
 acmeService = AcmeService(staging=staging, pem_path=certDir)
 
@@ -54,33 +58,34 @@ acmeService = AcmeService(staging=staging, pem_path=certDir)
 vhostResource = restoreVhostResource()
 
 webProxyServer = strports.service(
-    'tcp6:port={}'.format(frontendHTTP),
-    server.Site(vhostResource))
+    "tcp6:port={}".format(frontendHTTP), server.Site(vhostResource)
+)
 
 webTLSProxyServer = strports.service(
-    'tcp6:port={}'.format(frontendHTTPS),
-    MagicTLSProtocolFactory(webProxyServer.factory,
-                            acmeService=acmeService))
+    "tcp6:port={}".format(frontendHTTPS),
+    MagicTLSProtocolFactory(webProxyServer.factory, acmeService=acmeService),
+)
 
 managementServer = strports.service(
-    'tcp6:port={}'.format(managementPort),
-    server.Site(managementApp(vhostResource, persist).resource()))
+    "tcp6:port={}".format(managementPort),
+    server.Site(managementApp(vhostResource, persist).resource()),
+)
 
 backendWebServer = strports.service(
-    'tcp6:port={}'.format(backendHTTP),
-    server.Site(BackendWebResource(acmeService)))
+    "tcp6:port={}".format(backendHTTP), server.Site(BackendWebResource(acmeService))
+)
 
 backendTLSWebServer = strports.service(
-    'tcp6:port={}'.format(backendHTTPS),
-    MagicTLSProtocolFactory(backendWebServer.factory,
-                            acmeService=acmeService))
+    "tcp6:port={}".format(backendHTTPS),
+    MagicTLSProtocolFactory(backendWebServer.factory, acmeService=acmeService),
+)
 
 
 __all__ = [
-    'acmeService',
-    'webProxyServer',
-    'webTLSProxyServer',
-    'managementServer',
-    'backendWebServer',
-    'backendTLSWebServer',
+    "acmeService",
+    "webProxyServer",
+    "webTLSProxyServer",
+    "managementServer",
+    "backendWebServer",
+    "backendTLSWebServer",
 ]
